@@ -7,5 +7,5 @@ files=`find ~/automate -name "*.json"`
 
 for x in $files
 do
-	python ./parse_json.py $x | ./backup.sh
+	python parse_json.py $x | ./backup.sh
 done

@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # This will be the directory where you will store .json files for project
-# eg: project_backup.json
-mkdir -p ~/automate
+mkdir -p ~/automate # eg: project_backup.json
+chmod +x cron.sh backup.sh
 
 crontab -l > cronfile
-echo "0 0 */3 * * $PWD/cron.sh" >> cronfile
+# to install cron job uncomment this line
+# echo "0 0 */3 * * $PWD/cron.sh" >> cronfile
 crontab cronfile
 
 # Installation complete
