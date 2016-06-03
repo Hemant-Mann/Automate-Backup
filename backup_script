@@ -61,9 +61,10 @@ push_backup() {
 logging() {
 	output=`date`
 	filename="`date +%Y-%m-%d`.txt"
-	mkdir -p ~/backup_logs
-	touch ~/backup_logs/$filename
-	echo "Backup: '$project' (Server: $server_ip, path: $server_path) Completed on $output" >> ~/backup_logs/$filename
+	mkdir -p ~/automate/backup_logs
+	
+	touch ~/automate/backup_logs/$filename
+	echo "Backup: '$project' (Server: $server_ip, path: $server_path) Completed on $output" >> ~/automate/backup_logs/$filename
 }
 
 backup_mysql
