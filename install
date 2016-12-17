@@ -6,7 +6,7 @@ chmod +x cron_script backup_script
 cp project_backup.json ~/automate/
 
 crontab -l > cronfile
-# to install cron job uncomment this line
+# cron job executing every 3rd day
 echo "0 0 */3 * * $PWD/cron_script" >> cronfile
 crontab cronfile
 

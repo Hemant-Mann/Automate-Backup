@@ -5,7 +5,9 @@
 
 files=`find ~/automate -name "*.json"`
 
+# Get the path to this directory
+dirn=$(dirname $0)
 for x in $files
 do
-	python parse_json.py $x | ./backup_script
+	python parse_json.py $x | ${dirn}/backup_script
 done

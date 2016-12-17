@@ -54,7 +54,16 @@ push_backup() {
 		sleep 1
 		exit
 	"
+}
+
+clean_up() {
+	echo "Cleaning UP"
 	rm ../${project}.tar
+}
+
+# Get file size of the Project TAR
+file_size() {
+	ls -lah ../${project}.tar | grep -o '[0-9]\+[a-zA-Z]'
 }
 
 # Log the backup process
@@ -64,7 +73,8 @@ logging() {
 	mkdir -p ~/automate/backup_logs
 	
 	touch ~/automate/backup_logs/$filename
-	echo "Backup: '$project' (Server: $server_ip, path: $server_path) Completed on $output" >> ~/automate/backup_logs/$filename
+	fSize=$(file_size)
+	echo "Backup: '$project' Size: $fSize (Server: $server_ip, path: $server_path) Completed on $output" >> ~/automate/backup_logs/$filename
 }
 
 backup_mysql
