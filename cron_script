@@ -9,5 +9,5 @@ files=`find ~/automate -name "*.json"`
 dirn=$(dirname $0)
 for x in $files
 do
-	python parse_json.py $x | ${dirn}/backup_script
+	python ${dirn}/parse_json.py $x | ${dirn}/backup_script
 done

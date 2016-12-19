@@ -26,29 +26,29 @@ read -p "Backup Server User: " server_user
 # Check for expect
 type expect 2> /dev/null || { sudo apt-get install -y expect; }
 
-cd $project_dir
+mkdir -p ~/automate/${project}
+backup_file=~/automate/${project}.tar
 
 # Take a backup of mysql database if db exists
 backup_mysql() {
-	if [[ ! $db_name ]]; then
+	if [[ -z "$db_name" ]]; then
 		return 1;
 	fi
-	mysqldump -u root -p${mysql_root} ${db_name} > ${db_name}.sql
+	sudo mysqldump -u root -p${mysql_root} ${db_name} > ~/automate/${project}/${db_name}.sql
 }
 
 # Make a compressed tar file of the project
 make_tar() {
-	cd ..
-	tar -cvzf ${project}.tar ${project_dir##*/}
-	rm $project_dir/${db_name}.sql
-	cd $project_dir
+	cp -r ${project_dir} ~/automate/${project}
+	cd ~/automate
+	tar -cvzf ${project}.tar ${project}
 }
 
 # Push the backup tar to the remote server using "expect"
 push_backup() {
 	expect -c "
 		set timeout -1
-		spawn scp -o StrictHostKeyChecking=no ../${project}.tar ${server_user}@${server_ip}:${server_path}
+		spawn scp -o StrictHostKeyChecking=no $backup_file ${server_user}@${server_ip}:${server_path}
 		expect password: { send $server_pass\r }
 		expect '100%'
 		sleep 1
@@ -58,26 +58,29 @@ push_backup() {
 
 clean_up() {
 	echo "Cleaning UP"
-	rm ../${project}.tar
+	rm $backup_file
+	rm -rf ~/automate/${project}
 }
 
 # Get file size of the Project TAR
 file_size() {
-	ls -lah ../${project}.tar | grep -o '[0-9]\+[a-zA-Z]'
+	ls -lah $backup_file | grep -o '[0-9]\+[a-zA-Z]'
 }
 
 # Log the backup process
 logging() {
 	output=`date`
 	filename="`date +%Y-%m-%d`.txt"
-	mkdir -p ~/automate/backup_logs
+	mkdir -p ~/automate/logs ~/automate/logs/${project}
+	bkFile=~/automate/logs/${project}/${filename}
 	
-	touch ~/automate/backup_logs/$filename
+	touch $bkFile
 	fSize=$(file_size)
-	echo "Backup: '$project' Size: $fSize (Server: $server_ip, path: $server_path) Completed on $output" >> ~/automate/backup_logs/$filename
+	echo "Backup: '$project' Size: $fSize (Server: $server_ip, path: $server_path) Completed on $output" >> $bkFile
 }
 
 backup_mysql
 make_tar
 push_backup
 logging
+clean_up
