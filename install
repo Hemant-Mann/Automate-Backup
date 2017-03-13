@@ -1,13 +1,111 @@
 #!/bin/bash
+#
+# Automating BACKUP's
 
-# This will be the directory where you will store .json files for project
-mkdir -p ~/automate # eg: project_backup.json
-chmod +x cron_script backup_script
-cp project_backup.json ~/automate/
+function make_executable() {
+	echo "------- Permissions ----------"
+	echo "- Making the scripts executeable"
+	chmod +x runner backup_script
+}
 
-crontab -l > cronfile
-# cron job executing every 3rd day
-echo "0 0 */3 * * $PWD/cron_script" >> cronfile
-crontab cronfile
+function create_folders() {
+	echo "-------- Folders ----------"
+	mkdir -p ~/automate
+	echo "- Backup Folder Created: ~/automate"
+	cp project_backup.json ~/automate/
+	echo "- Copied sample project_backup.json file in ~/automate"
+}
+
+function setup_cron() {
+	echo "------- CRON ----------"
+	echo "- Setting UP CRON tab for backups after every $1 days"
+	crontab -l > cronfile
+	echo "0 0 */$1 * * $PWD/runner" >> cronfile
+	crontab cronfile
+	rm cronfile
+}
+
+function display_command() {
+	echo "===> $1"
+}
+
+function install_expect() {
+	echo "- Trying to install expect"
+	if [[ ! -z `which apt-get` ]]; then
+		cmd="sudo apt-get install -y expect"
+		display_command $cmd
+		$cmd
+	elif [[ ! -z `which yum` ]]; then
+		cmd="sudo yum install -y expect"
+		display_command $cmd
+		$cmd
+	elif [[ ! -z `which brew` ]]; then
+		cmd="brew install expect"
+		display_command $cmd
+		$cmd
+	fi
+}
+
+function check_expect() {
+	echo "-------- Checking for expect ----------"
+
+	if [[ -z `which expect` ]]; then
+		install_expect
+
+		if [[ -z `which expect` ]]; then
+			echo "- ******** Failed to install EXPECT, will not be able to backup files to Remote SERVER ***********"
+		fi
+	fi
+}
+
+cronSetup="no"
+cronDays="3"
+while [[ $# -ge 1 ]]
+do
+	key="$1"
+
+	case $key in
+		-c|--cron)
+		    cronSetup="$2"
+		    shift
+		    ;;
+		-d|--days)
+			cronDays="$2"
+			shift
+			;;
+		-h|--help)
+			cat <<- EOF
+			Usage ./install --cron yes --days 4
+
+			Available Options:
+			--cron 		-c 	yes|no 		Whether Cron should be executed
+			--days 		-d 	int 		No of days after which the cron should be executed
+
+			To Take the Backup Manually do
+			./runner
+			EOF
+			exit
+			;;
+		*)
+			echo "Help DOC ./install --help"
+			exit
+		   	;;
+	esac
+	shift # past argument or value
+done
+
+check_expect
+
+make_executable
+create_folders
+
+# Setup cron if required
+cronSetup=$(echo $cronSetup | tr [A-Z] [a-z])
+if [[ $cronSetup == "yes" || $cronSetup == "y" ]]; then
+	setup_cron $cronDays
+else
+	echo "-------- INFO ---------"
+	echo "- Cron was not installed by the USER"
+fi
 
 # Installation complete

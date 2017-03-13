@@ -2,7 +2,8 @@
 
 # Initialize Global Variables
 db_name=
-mysql_root=
+mysql_pass=
+mysql_user=
 server_ip=
 server_user=
 server_pass=
@@ -12,7 +13,8 @@ project_dir=
 
 # Read the values parsed from json file
 read -p "DB Name: " db_name
-read -p "Mysql root pass: " mysql_root
+read -p "Mysql user pass: " mysql_pass
+read -p "Mysql user name: " mysql_user
 read -p "Project: " project
 read -p "Project Dir: " project_dir
 
@@ -22,10 +24,6 @@ read -p "Backup Server path: " server_path # path can be relative to user or ful
 # path should exist on remote server otherwise error will be thrown
 read -p "Backup Server User: " server_user
 
-
-# Check for expect
-type expect 2> /dev/null || { sudo apt-get install -y expect; }
-
 mkdir -p ~/automate/${project}
 backup_file=~/automate/${project}.tar
 
@@ -34,11 +32,13 @@ backup_mysql() {
 	if [[ -z "$db_name" ]]; then
 		return 1;
 	fi
-	sudo mysqldump -u root -p${mysql_root} ${db_name} > ~/automate/${project}/${db_name}.sql
+	echo "------------ Backup MYSQL -----------"
+	mysqldump -u ${mysql_user} -p${mysql_pass} ${db_name} > ~/automate/${project}/${db_name}.sql
 }
 
 # Make a compressed tar file of the project
 make_tar() {
+	echo "------------ Making TAR file -----------"
 	cp -r ${project_dir} ~/automate/${project}
 	cd ~/automate
 	tar -cvzf ${project}.tar ${project}
@@ -46,6 +46,7 @@ make_tar() {
 
 # Push the backup tar to the remote server using "expect"
 push_backup() {
+	echo "------------ Sending Backup to remote server -----------"
 	expect -c "
 		set timeout -1
 		spawn scp -o StrictHostKeyChecking=no $backup_file ${server_user}@${server_ip}:${server_path}
@@ -57,7 +58,7 @@ push_backup() {
 }
 
 clean_up() {
-	echo "Cleaning UP"
+	echo "------ Cleaning UP --------"
 	rm $backup_file
 	rm -rf ~/automate/${project}
 }
@@ -69,6 +70,7 @@ file_size() {
 
 # Log the backup process
 logging() {
+	echo "--------- Logging ----------"
 	output=`date`
 	filename="`date +%Y-%m-%d`.txt"
 	mkdir -p ~/automate/logs ~/automate/logs/${project}

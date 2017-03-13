@@ -1,6 +1,7 @@
 {
     "db_name": "database name",
-    "mysql": "root_pass",
+    "mysql_pass": "user_pass",
+    "mysql_user": "user_name",
     "project": "Name of the project",
     "project_dir": "/path/to/public_html",
     "server_ip": "backup server ip",
