@@ -5,6 +5,7 @@
     "project": "Name of the project",
     "project_dir": "/path/to/public_html",
     "server_ip": "backup server ip",
+    "server_key_file": "/path/to/pem/file",
     "server_pass": "password",
     "server_path": "~/",
     "server_user": "user"

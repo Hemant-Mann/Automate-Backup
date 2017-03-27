@@ -5,6 +5,7 @@ db_name=
 mysql_pass=
 mysql_user=
 server_ip=
+server_key_file=
 server_user=
 server_pass=
 server_path=
@@ -19,6 +20,7 @@ read -p "Project: " project
 read -p "Project Dir: " project_dir
 
 read -p "Backup Server IP: " server_ip
+read -p "Backup Server Key File: " server_key_file
 read -p "Backup Server User-pass: " server_pass
 read -p "Backup Server path: " server_path # path can be relative to user or full-path 
 # path should exist on remote server otherwise error will be thrown
@@ -47,14 +49,18 @@ make_tar() {
 # Push the backup tar to the remote server using "expect"
 push_backup() {
 	echo "------------ Sending Backup to remote server -----------"
-	expect -c "
-		set timeout -1
-		spawn scp -o StrictHostKeyChecking=no $backup_file ${server_user}@${server_ip}:${server_path}
-		expect password: { send $server_pass\r }
-		expect '100%'
-		sleep 1
-		exit
-	"
+	if [[ -z $server_key_file ]]; then
+		expect -c "
+			set timeout -1
+			spawn scp -o StrictHostKeyChecking=no $backup_file ${server_user}@${server_ip}:${server_path}
+			expect password: { send $server_pass\r }
+			expect '100%'
+			sleep 1
+			exit
+		"
+	else
+		scp -i ${server_key_file} -o StrictHostKeyChecking=no $backup_file ${server_user}@${server_ip}:${server_path}
+	fi
 }
 
 clean_up() {
